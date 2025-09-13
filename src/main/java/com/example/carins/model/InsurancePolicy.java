@@ -1,6 +1,7 @@
 package com.example.carins.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
 
 @Entity
@@ -14,6 +15,7 @@ public class InsurancePolicy {
 
     private String provider;
     private LocalDate startDate;
+
     private LocalDate endDate; // nullable == open-ended
 
     public InsurancePolicy() {}

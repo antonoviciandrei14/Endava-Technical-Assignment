@@ -5,8 +5,11 @@ import com.example.carins.model.InsurancePolicy;
 import com.example.carins.service.CarService;
 import com.example.carins.web.dto.CarDto;
 import com.example.carins.web.dto.PolicyDto;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -38,6 +41,18 @@ public class CarController {
         return ResponseEntity.ok(new InsuranceValidityResponse(carId, d.toString(), valid));
     }
 
+    @PostMapping("/create-policy")
+    public ResponseEntity<PolicyDto> createPolicy(@Valid @RequestBody PolicyDto pDto) {
+
+        InsurancePolicy savedPolicy = service.createPolicy(
+                pDto.car_id(),
+                pDto.provider(),
+                pDto.startDate(),
+                pDto.endDate()
+        );
+        return ResponseEntity.ok(toDto(savedPolicy));
+    }
+
     private CarDto toDto(Car c) {
         var o = c.getOwner();
         return new CarDto(c.getId(), c.getVin(), c.getMake(), c.getModel(), c.getYearOfManufacture(),
@@ -49,4 +64,5 @@ public class CarController {
         return new PolicyDto(p.getId(), p.getCar().getId(), p.getProvider(), p.getStartDate(), p.getEndDate());
     }
     public record InsuranceValidityResponse(Long carId, String date, boolean valid) {}
+
 }
