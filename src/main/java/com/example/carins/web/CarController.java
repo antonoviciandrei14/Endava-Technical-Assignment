@@ -1,8 +1,10 @@
 package com.example.carins.web;
 
 import com.example.carins.model.Car;
+import com.example.carins.model.InsurancePolicy;
 import com.example.carins.service.CarService;
 import com.example.carins.web.dto.CarDto;
+import com.example.carins.web.dto.PolicyDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,10 @@ public class CarController {
     public List<CarDto> getCars() {
         return service.listCars().stream().map(this::toDto).toList();
     }
+    @GetMapping("/policies")
+    public List<PolicyDto> getPolicies() {
+        return service.listPolicies().stream().map(this::toDto).toList();
+    }
 
     @GetMapping("/cars/{carId}/insurance-valid")
     public ResponseEntity<?> isInsuranceValid(@PathVariable Long carId, @RequestParam String date) {
@@ -39,6 +45,8 @@ public class CarController {
                 o != null ? o.getName() : null,
                 o != null ? o.getEmail() : null);
     }
-
+    private PolicyDto toDto(InsurancePolicy p) {
+        return new PolicyDto(p.getId(), p.getCar().getId(), p.getProvider(), p.getStartDate(), p.getEndDate());
+    }
     public record InsuranceValidityResponse(Long carId, String date, boolean valid) {}
 }
