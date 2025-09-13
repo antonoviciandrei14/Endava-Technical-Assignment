@@ -1,11 +1,14 @@
 package com.example.carins.service;
 
 import com.example.carins.model.Car;
+import com.example.carins.model.InsuranceClaim;
 import com.example.carins.model.InsurancePolicy;
 import com.example.carins.repo.CarRepository;
+import com.example.carins.repo.InsuranceClaimRepository;
 import com.example.carins.repo.InsurancePolicyRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -17,10 +20,12 @@ public class CarService {
 
     private final CarRepository carRepository;
     private final InsurancePolicyRepository policyRepository;
+    private final InsuranceClaimRepository claimRepository;
 
-    public CarService(CarRepository carRepository, InsurancePolicyRepository policyRepository) {
+    public CarService(CarRepository carRepository, InsurancePolicyRepository policyRepository, InsuranceClaimRepository claimRepository) {
         this.carRepository = carRepository;
         this.policyRepository = policyRepository;
+        this.claimRepository = claimRepository;
     }
 
     public List<Car> listCars() {
@@ -32,7 +37,8 @@ public class CarService {
 
     public Car findById(Long id)
     {
-        return carRepository.findById(id).orElseThrow(() -> new RuntimeException("Car with ID " + id + " not found"));
+        return carRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Car with ID " + id + " not found"));
 
     }
     public boolean isInsuranceValid(Long carId, LocalDate date) {
@@ -54,6 +60,10 @@ public class CarService {
         }
         Car car = findById(carId);
 
+        if(endDate.isBefore(startDate))
+        {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date is before start date.");
+        }
         InsurancePolicy policy = new InsurancePolicy();
         policy.setCar(car);
         policy.setProvider(provider);
@@ -62,4 +72,27 @@ public class CarService {
 
         return policyRepository.save(policy);
     }
+    public InsuranceClaim createClaim(Long carId, String description, LocalDate claimDate, double amount) {
+        Car car = findById(carId);
+
+        if (!isInsuranceValid(carId, claimDate)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "No active insurance policy found for car on claim date: " + claimDate
+            );
+        }
+
+        InsuranceClaim claim = new InsuranceClaim();
+        claim.setCar(car);
+        claim.setDescription(description);
+        claim.setClaimDate(claimDate);
+        claim.setAmount(amount);
+
+        return claimRepository.save(claim);
+    }
+
+    public List<InsuranceClaim> getClaimsByCarId(@PathVariable Long carId) {
+        return claimRepository.findByCarId(carId);
+    }
+
 }

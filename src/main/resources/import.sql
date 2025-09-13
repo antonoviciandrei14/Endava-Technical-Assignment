@@ -13,5 +13,10 @@ COMMIT;
 
 ALTER TABLE insurancepolicy ALTER COLUMN end_date SET NOT NULL;
 
+INSERT INTO insuranceclaim (car_id, claim_date, description, amount) VALUES (1, '2024-05-15', 'Rear protection broke due to car hit.', 1250);
+INSERT INTO insuranceclaim (car_id, claim_date, description, amount) VALUES (1, '2024-08-22', 'Windshield replacement due to stone hit.', 350);
+INSERT INTO insuranceclaim (car_id, claim_date, description, amount) VALUES (2, '2025-08-10', 'Driver door to be repainted.', 1000.21);
+
+
 
 

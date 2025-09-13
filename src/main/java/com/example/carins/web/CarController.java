@@ -1,16 +1,18 @@
 package com.example.carins.web;
 
 import com.example.carins.model.Car;
+import com.example.carins.model.InsuranceClaim;
 import com.example.carins.model.InsurancePolicy;
 import com.example.carins.service.CarService;
 import com.example.carins.web.dto.CarDto;
+import com.example.carins.web.dto.ClaimDto;
 import com.example.carins.web.dto.PolicyDto;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -53,6 +55,29 @@ public class CarController {
         return ResponseEntity.ok(toDto(savedPolicy));
     }
 
+    @PostMapping("/create-claim")
+    public ResponseEntity<ClaimDto> createClaim(@Valid @RequestBody ClaimDto cDto) {
+
+        InsuranceClaim savedClaim = service.createClaim(
+                cDto.car_id(),
+                cDto.description(),
+                cDto.claimDate(),
+                cDto.amount()
+        );
+        return ResponseEntity.ok(toDto(savedClaim));
+        /*URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{claimId}")
+                .buildAndExpand(savedClaim.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(cDto);*/
+    }
+
+    @GetMapping("cars/{carId}/claims")
+    public List<ClaimDto> getClaims(@PathVariable Long carId) {
+        return service.getClaimsByCarId(carId).stream().map(this::toDto).toList();
+    }
     private CarDto toDto(Car c) {
         var o = c.getOwner();
         return new CarDto(c.getId(), c.getVin(), c.getMake(), c.getModel(), c.getYearOfManufacture(),
@@ -62,6 +87,10 @@ public class CarController {
     }
     private PolicyDto toDto(InsurancePolicy p) {
         return new PolicyDto(p.getId(), p.getCar().getId(), p.getProvider(), p.getStartDate(), p.getEndDate());
+    }
+
+    private ClaimDto toDto(InsuranceClaim c) {
+        return new ClaimDto(c.getId(), c.getCar().getId(), c.getDescription(), c.getClaimDate(), c.getAmount());
     }
     public record InsuranceValidityResponse(Long carId, String date, boolean valid) {}
 
