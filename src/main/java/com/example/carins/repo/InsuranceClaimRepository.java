@@ -1,11 +1,17 @@
 package com.example.carins.repo;
 
 import com.example.carins.model.InsuranceClaim;
+import com.example.carins.model.InsurancePolicy;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface InsuranceClaimRepository extends JpaRepository<InsuranceClaim, Long> {
+
+    @Query("select c from InsuranceClaim c where c.car.id = :carId order by c.claimDate asc")
+    List<InsuranceClaim> findAllClaimsByCarId(@Param("carId") Long carId);
 
     List<InsuranceClaim> findByCarId(Long carId);
 

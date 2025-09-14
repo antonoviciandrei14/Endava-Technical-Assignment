@@ -24,5 +24,8 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
             "and p.endDate >= :startDate")
     boolean existsOverlappingPolicy(@Param("carId") Long carId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
+    @Query("select p from InsurancePolicy p where p.car.id = :carId order by p.startDate asc")
+    List<InsurancePolicy> findAllPoliciesByCarId(@Param("carId") Long carId);
+
     List<InsurancePolicy> findByCarId(Long carId);
 }

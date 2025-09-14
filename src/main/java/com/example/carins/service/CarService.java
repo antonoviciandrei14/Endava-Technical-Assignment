@@ -6,13 +6,18 @@ import com.example.carins.model.InsurancePolicy;
 import com.example.carins.repo.CarRepository;
 import com.example.carins.repo.InsuranceClaimRepository;
 import com.example.carins.repo.InsurancePolicyRepository;
+import com.example.carins.web.dto.CarDto;
+import com.example.carins.web.dto.HistoryDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -95,4 +100,54 @@ public class CarService {
         return claimRepository.findByCarId(carId);
     }
 
+    public List<HistoryDto> getCarHistory(Long carId) {
+        Car car = findById(carId);
+
+        List<HistoryDto> events = new ArrayList<>();
+
+        events.add(new HistoryDto(
+                "CAR_PURCHASE",
+                car.getPurchaseDate().toString(),
+                Map.of(
+                        "carId", car.getId(),
+                        "vin", car.getVin(),
+                        "make", car.getMake(),
+                        "model", car.getModel(),
+                        "year of manufacture", car.getYearOfManufacture()
+                )
+        ));
+
+        List<InsurancePolicy> policies = policyRepository.findAllPoliciesByCarId(carId);
+        for (InsurancePolicy policy : policies) {
+            events.add(new HistoryDto(
+                    "POLICY_DETAILS",
+                    policy.getStartDate().toString(),
+                    Map.of(
+                            "policyId", policy.getId(),
+                            "provider", policy.getProvider(),
+                            "startDate", policy.getStartDate().toString(),
+                            "endDate", policy.getEndDate().toString(),
+                            "isActive", !policy.getEndDate().isBefore(LocalDate.now())
+                    )
+            ));
+        }
+
+        List<InsuranceClaim> claims = claimRepository.findAllClaimsByCarId(carId);
+        for (InsuranceClaim claim : claims) {
+            events.add(new HistoryDto(
+                    "CLAIMS_DETAILS",
+                    claim.getClaimDate().toString(),
+                    Map.of(
+                            "claimId", claim.getId(),
+                            "description", claim.getDescription(),
+                            "claimDate", claim.getClaimDate(),
+                            "amount", claim.getAmount()
+
+                    )
+            ));
+        }
+
+        events.sort(Comparator.comparing(HistoryDto::eventDate)); //sortare cronologica -> eventDate
+        return events;
+    }
 }

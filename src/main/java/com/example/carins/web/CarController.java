@@ -6,6 +6,7 @@ import com.example.carins.model.InsurancePolicy;
 import com.example.carins.service.CarService;
 import com.example.carins.web.dto.CarDto;
 import com.example.carins.web.dto.ClaimDto;
+import com.example.carins.web.dto.HistoryDto;
 import com.example.carins.web.dto.PolicyDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -78,9 +79,15 @@ public class CarController {
     public List<ClaimDto> getClaims(@PathVariable Long carId) {
         return service.getClaimsByCarId(carId).stream().map(this::toDto).toList();
     }
+
+    @GetMapping("cars/{carId}/history")
+    public ResponseEntity<List<HistoryDto>> getHistory(@PathVariable Long carId) {
+        return ResponseEntity.ok(service.getCarHistory(carId));
+    }
+
     private CarDto toDto(Car c) {
         var o = c.getOwner();
-        return new CarDto(c.getId(), c.getVin(), c.getMake(), c.getModel(), c.getYearOfManufacture(),
+        return new CarDto(c.getId(), c.getVin(), c.getMake(), c.getModel(), c.getYearOfManufacture(), c.getPurchaseDate(),
                 o != null ? o.getId() : null,
                 o != null ? o.getName() : null,
                 o != null ? o.getEmail() : null);
