@@ -54,6 +54,16 @@ class CarInsuranceApplicationTests {
 
         assertEquals(404, exception.getStatusCode().value());
     }
+    @Test
+    void testInsuranceValidInvalidFormatDate() {
+        Long carId = 1L;
+
+        assertThrows(DateTimeParseException.class, () -> {
+            LocalDate invalidDate = LocalDate.parse("14-02-2025");
+            service.isInsuranceValid(carId, invalidDate);
+        });
+
+    }
 
     @Test
     void testCreateClaimNonExistentCar() {
@@ -175,4 +185,5 @@ class CarInsuranceApplicationTests {
             service.createClaim(carId, description, invalidDate, 1233);
         });
     }
+
 }
