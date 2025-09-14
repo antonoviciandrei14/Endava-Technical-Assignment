@@ -11,7 +11,9 @@ import com.example.carins.web.dto.PolicyDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -35,15 +37,21 @@ public class CarController {
 
     @GetMapping("/cars/{carId}/insurance-valid")
     public ResponseEntity<?> isInsuranceValid(@PathVariable Long carId, @RequestParam String date) {
-        // TODO: validate date format and handle errors consistently
+        // TODO: validate date format and handle errors consistently (made in service)
         LocalDate d = LocalDate.parse(date);
+        /*LocalDate d;
+        try {
+            d = LocalDate.parse(date);
+        } catch (DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Invalid YYYY-MM-DD format");
+        }*/
         boolean valid = service.isInsuranceValid(carId, d);
         return ResponseEntity.ok(new InsuranceValidityResponse(carId, d.toString(), valid));
     }
 
     @PostMapping("/create-policy")
     public ResponseEntity<PolicyDto> createPolicy(@Valid @RequestBody PolicyDto pDto) {
-
         InsurancePolicy savedPolicy = service.createPolicy(
                 pDto.car_id(),
                 pDto.provider(),
@@ -55,7 +63,6 @@ public class CarController {
 
     @PostMapping("/create-claim")
     public ResponseEntity<ClaimDto> createClaim(@Valid @RequestBody ClaimDto cDto) {
-
         InsuranceClaim savedClaim = service.createClaim(
                 cDto.car_id(),
                 cDto.description(),

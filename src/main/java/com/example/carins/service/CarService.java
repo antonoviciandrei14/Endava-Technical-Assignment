@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -46,8 +47,10 @@ public class CarService {
 
     }
     public boolean isInsuranceValid(Long carId, LocalDate date) {
-        if (carId == null || date == null)
+        validateDate(date);
+        if (carId == null) {
             return false; //sau illegal_argument
+        }
         // TODO: optionally throw NotFound if car does not exist
         if (!carRepository.existsById(carId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -58,16 +61,13 @@ public class CarService {
 
     public InsurancePolicy createPolicy(Long carId, String provider, LocalDate startDate, LocalDate endDate) {
 
+        validateDateRange(startDate, endDate);
         if(policyRepository.existsOverlappingPolicy(carId, startDate, endDate))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
         Car car = findById(carId);
 
-        if(endDate.isBefore(startDate))
-        {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date is before start date.");
-        }
         InsurancePolicy policy = new InsurancePolicy();
         policy.setCar(car);
         policy.setProvider(provider);
@@ -77,6 +77,7 @@ public class CarService {
         return policyRepository.save(policy);
     }
     public InsuranceClaim createClaim(Long carId, String description, LocalDate claimDate, double amount) {
+        validateDate(claimDate);
         Car car = findById(carId);
 
         if (!isInsuranceValid(carId, claimDate)) {
@@ -149,4 +150,39 @@ public class CarService {
         events.sort(Comparator.comparing(HistoryDto::eventDate)); //sortare cronologica -> eventDate
         return events;
     }
+
+    public void validateDate(LocalDate date){
+        LocalDate parsedDate;
+        if (date == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Date cannot be null");
+        }
+        try {
+            parsedDate = LocalDate.parse(date.toString());
+        } catch (DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Invalid YYYY-MM-DD format");
+        }
+        LocalDate minDate = LocalDate.of(1900, 1, 1);
+        LocalDate maxDate = LocalDate.now().plusYears(10);
+
+        if (date.isBefore(minDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Date cannot be before " + minDate + ": " + date);
+        }
+
+        if (date.isAfter(maxDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Date cannot be more in the future:" + date);
+        }
+    }
+
+    public void validateDateRange(LocalDate startDate, LocalDate endDate){
+        validateDate(startDate);
+        validateDate(endDate);
+        if(endDate.isBefore(startDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date is before start date.");
+        }
+    }
+
 }
