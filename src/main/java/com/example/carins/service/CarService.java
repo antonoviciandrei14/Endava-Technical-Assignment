@@ -6,7 +6,6 @@ import com.example.carins.model.InsurancePolicy;
 import com.example.carins.repo.CarRepository;
 import com.example.carins.repo.InsuranceClaimRepository;
 import com.example.carins.repo.InsurancePolicyRepository;
-import com.example.carins.web.dto.CarDto;
 import com.example.carins.web.dto.HistoryDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
