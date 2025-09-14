@@ -27,5 +27,8 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
     @Query("select p from InsurancePolicy p where p.car.id = :carId order by p.startDate asc")
     List<InsurancePolicy> findAllPoliciesByCarId(@Param("carId") Long carId);
 
+    @Query("select p from InsurancePolicy p where p.endDate<= :yesterday order by p.startDate asc")
+    List<InsurancePolicy> findByEndDate(@Param("yesterday") LocalDate yesterday);
+
     List<InsurancePolicy> findByCarId(Long carId);
 }
